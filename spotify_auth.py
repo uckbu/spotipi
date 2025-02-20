@@ -10,26 +10,20 @@ SPOTIPY_REDIRECT_URI = 'http://localhost:8888'
 scope = "user-read-currently-playing"
 
 # Create SpotifyOAuth object
-sp_oauth = SpotifyOAuth(
+sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
     client_id=SPOTIPY_CLIENT_ID,
     client_secret=SPOTIPY_CLIENT_SECRET,
     redirect_uri=SPOTIPY_REDIRECT_URI,
     scope=scope,
-    cache_path=".cache"
-)
+    open_browser=False  # Prevent automatic browser opening
+))
 
-# Get the authorization URL
-auth_url = sp_oauth.get_authorize_url()
-print(f"Please navigate to this URL to authorize the app: {auth_url}")
+# Get the token info directly from the auth manager
+token_info = sp.auth_manager.get_cached_token()
 
-# Prompt the user to input the redirect URL after authorization
-response = input("Enter the URL you were redirected to after authorization: ")
-
-# Extract the authorization code from the redirect URL
-code = sp_oauth.parse_response_code(response)
-
-# Get the access token
-token_info = sp_oauth.get_access_token(code)
+if token_info is None:
+    # If no valid token exists, get a new one
+    token_info = sp.auth_manager.get_access_token()
 
 # Format the token info into the desired structure
 formatted_token = {
