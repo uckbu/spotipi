@@ -83,7 +83,7 @@ def main():
         
         while True:
             track_name, artist_name, album_cover_url, wait_time = get_current_track()
-            
+            wait_time = min(wait_time, 60)  # Limit wait time to 60 seconds
             if track_name and track_name != last_song:
                 album_cover = fetch_album_cover(album_cover_url) if album_cover_url else None
                 if album_cover:
