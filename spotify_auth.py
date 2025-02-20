@@ -7,8 +7,29 @@ SPOTIPY_REDIRECT_URI = 'http://localhost:8888'
 
 scope = "user-read-currently-playing"
 
-sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
+sp_oauth = SpotifyOAuth(
     client_id=SPOTIPY_CLIENT_ID,
     client_secret=SPOTIPY_CLIENT_SECRET,
     redirect_uri=SPOTIPY_REDIRECT_URI,
-    scope=scope))
+    scope=scope,
+    cache_path=".cache"
+)
+
+# Get the authorization URL
+auth_url = sp_oauth.get_authorize_url()
+print(f"Please navigate to this URL to authorize the app: {auth_url}")
+
+# Prompt the user to input the redirect URL after authorization
+response = input("Enter the URL you were redirected to after authorization: ")
+
+# Extract the authorization code from the redirect URL
+code = sp_oauth.parse_response_code(response)
+
+# Get the access token
+token_info = sp_oauth.get_access_token(code)
+
+# Save the token info to the cache file
+with open(".cache", "w") as cache_file:
+    cache_file.write(token_info['access_token'])
+
+print("Authentication successful! Token saved to .cache file.")
