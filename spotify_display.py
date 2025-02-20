@@ -5,6 +5,8 @@ from waveshare_epd import epd7in5_V2
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 import os
+import requests
+from io import BytesIO
 
 # Spotify credentials
 SPOTIPY_CLIENT_ID = '6f46637d9d214a998c0e859d3047ddab'
@@ -13,7 +15,6 @@ SPOTIPY_REDIRECT_URI = 'http://localhost:8888'
 SCOPE = 'user-read-currently-playing'
 CACHE_PATH = os.path.join(os.path.expanduser('~'), '.cache-spotify')
 
-# Initialize Spotify client using the same cache path as auth script
 auth_manager = SpotifyOAuth(
     client_id=SPOTIPY_CLIENT_ID,
     client_secret=SPOTIPY_CLIENT_SECRET,
@@ -28,42 +29,69 @@ def get_current_track():
     try:
         current = sp.currently_playing()
         if current and current['is_playing']:
-            return f"{current['item']['name']}\nby {current['item']['artists'][0]['name']}"
-        return "No track playing"
+            track_name = current['item']['name']
+            artist_name = current['item']['artists'][0]['name']
+            album_cover_url = current['item']['album']['images'][0]['url']
+            duration_ms = current['item']['duration_ms']
+            progress_ms = current['progress_ms']
+            time_remaining = (duration_ms - progress_ms) / 1000
+            return track_name, artist_name, album_cover_url, time_remaining
+        return None, None, None, 10  # Default wait time if no track is playing
     except Exception as e:
         print(f"Error getting current track: {str(e)}")
-        return "Error getting track info"
+        return None, None, None, 10
 
-def update_display():
+def fetch_album_cover(url):
     try:
-        # Reinitialize the display before each update
+        response = requests.get(url)
+        return Image.open(BytesIO(response.content))
+    except Exception as e:
+        print(f"Error fetching album cover: {str(e)}")
+        return None
+
+def update_display(track_name, artist_name, album_cover):
+    try:
         epd = epd7in5_V2.EPD()
         epd.init()
         
-        # Create the image
         image = Image.new('1', (epd.width, epd.height), 255)
         draw = ImageDraw.Draw(image)
-        font = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', 32)
         
-        track_info = get_current_track()
-        draw.text((50, 200), track_info, font=font, fill=0)
+        # Load fonts
+        font_large = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', 32)
+        font_small = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', 24)
         
-        # Display and sleep
+        # Resize album cover to fit most of the display
+        cover_resized = album_cover.resize((epd.width, int(epd.height * 0.8)))
+        image.paste(cover_resized, (0, 0))
+        
+        # Draw song info in bottom left corner
+        draw.text((10, epd.height - 60), track_name, font=font_large, fill=0)
+        draw.text((10, epd.height - 30), artist_name, font=font_small, fill=0)
+        
         epd.display(epd.getbuffer(image))
         epd.sleep()
-        
     except Exception as e:
         print(f"Error updating display: {str(e)}")
 
 def main():
+    last_song = None
+    
     try:
         print("Starting Spotify Display...")
         print("Press CTRL+C to stop")
         
         while True:
-            update_display()
-            time.sleep(30)  # Update every 30 seconds
+            track_name, artist_name, album_cover_url, wait_time = get_current_track()
             
+            if track_name and track_name != last_song:
+                album_cover = fetch_album_cover(album_cover_url) if album_cover_url else None
+                if album_cover:
+                    update_display(track_name, artist_name, album_cover)
+                last_song = track_name
+            
+            time.sleep(wait_time)  # Only update after song duration
+    
     except KeyboardInterrupt:
         print("\nProgram stopped by user")
         try:
@@ -73,7 +101,6 @@ def main():
             epd.sleep()
         except:
             pass
-        
     except Exception as e:
         print(f"Unexpected error: {str(e)}")
         try:
