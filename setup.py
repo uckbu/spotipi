@@ -3,13 +3,13 @@ import spotipy
 import requests
 from io import BytesIO
 from spotipy.oauth2 import SpotifyOAuth
-from waveshare_epd import epd7in5_V2  # Adjusted for the new e-ink model
+from waveshare_epd import epd7in5_V2 #adjust based on available e-ink display
 from PIL import Image, ImageDraw, ImageFont
 
 # Spotify API credentials
-SPOTIPY_CLIENT_ID = "your_client_id"
-SPOTIPY_CLIENT_SECRET = "your_client_secret"
-SPOTIPY_REDIRECT_URI = "http://localhost:8888/callback"
+SPOTIPY_CLIENT_ID = "6f46637d9d214a998c0e859d3047ddab"
+SPOTIPY_CLIENT_SECRET = "bf0ff2b63eb64f73acbd1ca3a1188c17"
+SPOTIPY_REDIRECT_URI = "http://spotipi/callback"
 SCOPE = "user-read-currently-playing"
 
 # Initialize Spotify client
