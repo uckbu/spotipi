@@ -1,4 +1,5 @@
 import spotipy
+import json
 from spotipy.oauth2 import SpotifyOAuth
 
 SPOTIPY_CLIENT_ID = '6f46637d9d214a998c0e859d3047ddab'
@@ -7,6 +8,7 @@ SPOTIPY_REDIRECT_URI = 'http://localhost:8888'
 
 scope = "user-read-currently-playing"
 
+# Create SpotifyOAuth object
 sp_oauth = SpotifyOAuth(
     client_id=SPOTIPY_CLIENT_ID,
     client_secret=SPOTIPY_CLIENT_SECRET,
@@ -28,8 +30,8 @@ code = sp_oauth.parse_response_code(response)
 # Get the access token
 token_info = sp_oauth.get_access_token(code)
 
-# Save the token info to the cache file
+# Save the token info to the cache file in JSON format
 with open(".cache", "w") as cache_file:
-    cache_file.write(token_info['access_token'])
+    json.dump(token_info, cache_file)
 
 print("Authentication successful! Token saved to .cache file.")
