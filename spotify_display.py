@@ -9,9 +9,9 @@ import requests
 from io import BytesIO
 
 # Spotify credentials
-SPOTIPY_CLIENT_ID = ''
-SPOTIPY_CLIENT_SECRET = ''
-SPOTIPY_REDIRECT_URI = ''
+SPOTIPY_CLIENT_ID = '6f46637d9d214a998c0e859d3047ddab'
+SPOTIPY_CLIENT_SECRET = 'bf0ff2b63eb64f73acbd1ca3a1188c17'
+SPOTIPY_REDIRECT_URI = 'http://localhost:8888'
 SCOPE = 'user-read-currently-playing'
 CACHE_PATH = os.path.join(os.path.expanduser('~'), '.cache-spotify')
 
@@ -48,8 +48,36 @@ def fetch_album_cover(url):
     except Exception as e:
         print(f"Error fetching album cover: {str(e)}")
         return None
+def get_weather():
+    try:
 
-def update_display(track_name, artist_name, album_cover):
+        weather_url = f"https://api.open-meteo.com/v1/forecast?latitude=38.876908990049564&longitude=-77.3771395594816&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=auto"
+        response = requests.get(weather_url)
+        data = response.json()
+        hi_temp = data['daily']['temperature_2m_max'][0]
+        lo_temp = data['daily']['temperature_2m_min'][0]
+        weather_code = data['daily']['weathercode'][0]
+        weather_icon = fetch_weather_icon(weather_code)
+        return f"Hi: {hi_temp}° Lo: {lo_temp}°", weather_icon
+    except Exception as e:
+        print(f"Error fetching weather: {str(e)}")
+        return "Weather Unavailable", None
+
+def fetch_weather_icon(weather_code):
+    try:
+        weather_icons = {
+            0: "sunny.png",
+            1: "mostly_sunny.png",
+            2: "partly_cloudy.png",
+            3: "cloudy.png",
+        }
+        icon_path = weather_icons.get(weather_code, "unknown.png")
+        return Image.open(icon_path)
+    except Exception as e:
+        print(f"Error fetching weather icon: {str(e)}")
+        return None
+
+def update_display(track_name, artist_name, album_cover, weather_info, weather_icon):
     try:
         epd = epd7in5_V2.EPD()
         epd.init()
@@ -69,6 +97,11 @@ def update_display(track_name, artist_name, album_cover):
         draw.text((10, epd.height - 60), track_name, font=font_large, fill=0)
         draw.text((10, epd.height - 30), artist_name, font=font_small, fill=0)
         
+        # Draw weather info in bottom right corner
+        draw.text((epd.width - 180, epd.height - 60), weather_info, font=font_small, fill=0)
+        if weather_icon:
+            image.paste(weather_icon, (epd.width - 80, epd.height - 80))
+        
         epd.display(epd.getbuffer(image))
         epd.sleep()
     except Exception as e:
@@ -83,11 +116,12 @@ def main():
         
         while True:
             track_name, artist_name, album_cover_url, wait_time = get_current_track()
-            wait_time = min(wait_time, 60)  # Limit wait time to 60 seconds
+            weather_info, weather_icon = get_weather()
+            
             if track_name and track_name != last_song:
                 album_cover = fetch_album_cover(album_cover_url) if album_cover_url else None
                 if album_cover:
-                    update_display(track_name, artist_name, album_cover)
+                    update_display(track_name, artist_name, album_cover, weather_info, weather_icon)
                 last_song = track_name
             
             time.sleep(wait_time)  # Only update after song duration
