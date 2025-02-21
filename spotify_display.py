@@ -112,5 +112,4 @@ def update_display(track_name, artist_name, album_cover, weather_info, weather_i
     except Exception as e:
         print(f"Error updating display: {str(e)}")
 
-if __name__ == "__main__":
-    main()
+
