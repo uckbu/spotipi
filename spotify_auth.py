@@ -3,9 +3,9 @@ import json
 from spotipy.oauth2 import SpotifyOAuth
 import os
 
-SPOTIPY_CLIENT_ID = '6f46637d9d214a998c0e859d3047ddab'
-SPOTIPY_CLIENT_SECRET = 'bf0ff2b63eb64f73acbd1ca3a1188c17'
-SPOTIPY_REDIRECT_URI = 'http://localhost:8888'
+SPOTIPY_CLIENT_ID = ''
+SPOTIPY_CLIENT_SECRET = ''
+SPOTIPY_REDIRECT_URI = ''
 SCOPE = 'user-read-currently-playing'
 
 # Use consistent cache path
