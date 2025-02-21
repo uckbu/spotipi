@@ -112,4 +112,43 @@ def update_display(track_name, artist_name, album_cover, weather_info, weather_i
     except Exception as e:
         print(f"Error updating display: {str(e)}")
 
+def main():
+    last_song = None
+    
+    try:
+        print("Starting Spotify Display...")
+        print("Press CTRL+C to stop")
+        
+        while True:
+            track_name, artist_name, album_cover_url, wait_time = get_current_track()
+            weather_info, weather_icon = get_weather()
+            
+            if track_name and track_name != last_song:
+                album_cover = fetch_album_cover(album_cover_url) if album_cover_url else None
+                if album_cover:
+                    update_display(track_name, artist_name, album_cover, weather_info, weather_icon)
+                last_song = track_name
+            
+            time.sleep(wait_time)  # Only update after song duration
+    
+    except KeyboardInterrupt:
+        print("\nProgram stopped by user")
+        try:
+            epd = epd7in5_V2.EPD()
+            epd.init()
+            epd.Clear()
+            epd.sleep()
+        except:
+            pass
+    except Exception as e:
+        print(f"Unexpected error: {str(e)}")
+        try:
+            epd = epd7in5_V2.EPD()
+            epd.init()
+            epd.Clear()
+            epd.sleep()
+        except:
+            pass
 
+if __name__ == "__main__":
+    main()
