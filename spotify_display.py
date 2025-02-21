@@ -48,34 +48,22 @@ def fetch_album_cover(url):
     except Exception as e:
         print(f"Error fetching album cover: {str(e)}")
         return None
+
 def get_weather():
     try:
-
-        weather_url = f"https://api.open-meteo.com/v1/forecast?latitude=38.876908990049564&longitude=-77.3771395594816&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=auto"
+        weather_url = "https://api.open-meteo.com/v1/forecast?latitude=YOUR_LAT&longitude=YOUR_LON&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=auto"
         response = requests.get(weather_url)
         data = response.json()
-        hi_temp = data['daily']['temperature_2m_max'][0]
-        lo_temp = data['daily']['temperature_2m_min'][0]
+        hi_temp_c = data['daily']['temperature_2m_max'][0]
+        lo_temp_c = data['daily']['temperature_2m_min'][0]
+        hi_temp_f = (hi_temp_c * 9/5) + 32
+        lo_temp_f = (lo_temp_c * 9/5) + 32
         weather_code = data['daily']['weathercode'][0]
         weather_icon = fetch_weather_icon(weather_code)
-        return f"Hi: {hi_temp}° Lo: {lo_temp}°", weather_icon
+        return f"Hi: {hi_temp_f:.1f}°F Lo: {lo_temp_f:.1f}°F", weather_icon
     except Exception as e:
         print(f"Error fetching weather: {str(e)}")
         return "Weather Unavailable", None
-
-def fetch_weather_icon(weather_code):
-    try:
-        weather_icons = {
-            0: "sunny.png",
-            1: "mostly_sunny.png",
-            2: "partly_cloudy.png",
-            3: "cloudy.png",
-        }
-        icon_path = weather_icons.get(weather_code, "unknown.png")
-        return Image.open(icon_path)
-    except Exception as e:
-        print(f"Error fetching weather icon: {str(e)}")
-        return None
 
 def update_display(track_name, artist_name, album_cover, weather_info, weather_icon):
     try:
@@ -97,8 +85,8 @@ def update_display(track_name, artist_name, album_cover, weather_info, weather_i
         draw.text((10, epd.height - 60), track_name, font=font_large, fill=0)
         draw.text((10, epd.height - 30), artist_name, font=font_small, fill=0)
         
-        # Draw weather info in bottom right corner
-        draw.text((epd.width - 180, epd.height - 60), weather_info, font=font_small, fill=0)
+        # Draw weather info and move it left to make space for icon
+        draw.text((epd.width - 250, epd.height - 60), weather_info, font=font_small, fill=0)
         if weather_icon:
             image.paste(weather_icon, (epd.width - 80, epd.height - 80))
         
@@ -106,44 +94,6 @@ def update_display(track_name, artist_name, album_cover, weather_info, weather_i
         epd.sleep()
     except Exception as e:
         print(f"Error updating display: {str(e)}")
-
-def main():
-    last_song = None
-    
-    try:
-        print("Starting Spotify Display...")
-        print("Press CTRL+C to stop")
-        
-        while True:
-            track_name, artist_name, album_cover_url, wait_time = get_current_track()
-            weather_info, weather_icon = get_weather()
-            
-            if track_name and track_name != last_song:
-                album_cover = fetch_album_cover(album_cover_url) if album_cover_url else None
-                if album_cover:
-                    update_display(track_name, artist_name, album_cover, weather_info, weather_icon)
-                last_song = track_name
-            
-            time.sleep(wait_time)  # Only update after song duration
-    
-    except KeyboardInterrupt:
-        print("\nProgram stopped by user")
-        try:
-            epd = epd7in5_V2.EPD()
-            epd.init()
-            epd.Clear()
-            epd.sleep()
-        except:
-            pass
-    except Exception as e:
-        print(f"Unexpected error: {str(e)}")
-        try:
-            epd = epd7in5_V2.EPD()
-            epd.init()
-            epd.Clear()
-            epd.sleep()
-        except:
-            pass
 
 if __name__ == "__main__":
     main()
