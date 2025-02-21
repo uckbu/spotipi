@@ -51,19 +51,36 @@ def fetch_album_cover(url):
 
 def get_weather():
     try:
-        weather_url = "https://api.open-meteo.com/v1/forecast?latitude=YOUR_LAT&longitude=YOUR_LON&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=auto"
+        weather_url = "https://api.open-meteo.com/v1/forecast?latitude=YOUR_LAT&longitude=YOUR_LON&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weathercode&timezone=auto"
         response = requests.get(weather_url)
         data = response.json()
         hi_temp_c = data['daily']['temperature_2m_max'][0]
         lo_temp_c = data['daily']['temperature_2m_min'][0]
         hi_temp_f = (hi_temp_c * 9/5) + 32
         lo_temp_f = (lo_temp_c * 9/5) + 32
+        precipitation = data['daily']['precipitation_sum'][0]
         weather_code = data['daily']['weathercode'][0]
-        weather_icon = fetch_weather_icon(weather_code)
-        return f"Hi: {hi_temp_f:.1f}°F Lo: {lo_temp_f:.1f}°F", weather_icon
+        weather_icon = fetch_weather_icon(weather_code, precipitation)
+        return f"Hi: {hi_temp_f:.1f}°F Lo: {lo_temp_f:.1f}°F Precip: {precipitation}mm", weather_icon
     except Exception as e:
         print(f"Error fetching weather: {str(e)}")
         return "Weather Unavailable", None
+
+def fetch_weather_icon(weather_code, precipitation):
+    try:
+        weather_icons = {
+            0: "icons/sun.png",
+            1: "icons/mostly_sunny.png",
+            2: "icons/partly_cloudy.png",
+            3: "icons/cloudy.png",
+            61: "icons/rainy.png",
+            71: "icons/snowy.png"
+        }
+        icon_path = weather_icons.get(weather_code, "icons/unknown.png")
+        return Image.open(icon_path)
+    except Exception as e:
+        print(f"Error fetching weather icon: {str(e)}")
+        return None
 
 def update_display(track_name, artist_name, album_cover, weather_info, weather_icon):
     try:
