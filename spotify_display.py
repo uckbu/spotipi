@@ -54,6 +54,12 @@ def get_weather():
         weather_url = "https://api.open-meteo.com/v1/forecast?latitude=YOUR_LAT&longitude=YOUR_LON&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weathercode&timezone=auto"
         response = requests.get(weather_url)
         data = response.json()
+
+        print("Weather API Response:", data)  # Debugging line
+
+        if "daily" not in data:
+            raise KeyError("Missing 'daily' key in weather data")
+
         hi_temp_c = data['daily']['temperature_2m_max'][0]
         lo_temp_c = data['daily']['temperature_2m_min'][0]
         hi_temp_f = (hi_temp_c * 9/5) + 32
@@ -61,10 +67,13 @@ def get_weather():
         precipitation = data['daily']['precipitation_sum'][0]
         weather_code = data['daily']['weathercode'][0]
         weather_icon = fetch_weather_icon(weather_code, precipitation)
+
         return f"Hi: {hi_temp_f:.1f}°F Lo: {lo_temp_f:.1f}°F Precip: {precipitation}mm", weather_icon
+
     except Exception as e:
         print(f"Error fetching weather: {str(e)}")
         return "Weather Unavailable", None
+
 
 def fetch_weather_icon(weather_code, precipitation):
     try:
