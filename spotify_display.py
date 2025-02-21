@@ -9,9 +9,9 @@ import requests
 from io import BytesIO
 
 # Spotify credentials
-SPOTIPY_CLIENT_ID = '6f46637d9d214a998c0e859d3047ddab'
-SPOTIPY_CLIENT_SECRET = 'bf0ff2b63eb64f73acbd1ca3a1188c17'
-SPOTIPY_REDIRECT_URI = 'http://localhost:8888'
+SPOTIPY_CLIENT_ID = ''
+SPOTIPY_CLIENT_SECRET = ''
+SPOTIPY_REDIRECT_URI = ''
 SCOPE = 'user-read-currently-playing'
 CACHE_PATH = os.path.join(os.path.expanduser('~'), '.cache-spotify')
 
