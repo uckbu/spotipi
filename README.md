@@ -15,3 +15,5 @@ after that, run
 python3 spotify_display.py
 
 and youre done!
+
+made for a simple modification to my desktop setup at home.
